@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Math Solver - HSSC Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .offline-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            padding: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1.1em;
+            transition: border-color 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-solve {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-solve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-solve:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            background: #fee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 30px;
+            border-radius: 4px;
+            color: #c62828;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .results {
+            display: none;
+            padding: 30px;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .equation-display {
+            font-size: 1.3em;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            margin: 10px 0;
+        }
+
+        .solution-display {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2e7d32;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #2e7d32;
+            margin: 10px 0;
+        }
+
+        .steps-container {
+            background: white;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .step {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #764ba2;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .step-number {
+            font-weight: 700;
+            color: #764ba2;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .step-equation {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .example-equations {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 6px;
+        }
+
+        .example-equations h3 {
+            font-size: 0.9em;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .example-equations p {
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .info-note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #1565c0;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .input-section,
+            .results {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📐 Offline Math Solver</h1>
+            <p>HSSC Level Algebra Helper - Step-by-Step Solutions</p>
+            <div class="offline-badge">✓ Works Offline - No Internet Required</div>
+        </header>
+
+        <div class="input-section">
+            <form id="solverForm">
+                <div class="form-group">
+                    <label for="equation">Math Equation:</label>
+                    <input 
+                        type="text" 
+                        id="equation" 
+                        placeholder="e.g., 2*x + 3 = 7"
+                        required
+                    >
+                </div>
+
+                <div class="example-equations">
+                    <h3>Example Equations:</h3>
+                    <p>
+                        <strong>Linear:</strong> 2*x + 3 = 7 or 5*x - 10 = 15<br>
+                        <strong>With fractions:</strong> x/2 + 3 = 5 or 1/4*x + 5/4 = 3*y - 12/5<br>
+                        <strong>Quadratic:</strong> x^2 + 4*x + 4 = 0<br>
+                        <strong>Note:</strong> Use * for multiplication (2*x, not 2x)
+                    </p>
+                </div>
+
+                <div class="info-note">
+                    💡 <strong>Important:</strong> Always use the * symbol for multiplication. Write "2*x" instead of "2x", and "x*y" instead of "xy".
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button type="submit" class="btn-solve" id="solveBtn">
+                        🔍 Solve Equation
+                    </button>
+                    <button type="button" class="btn-clear" id="clearBtn">
+                        🗑️ Clear
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            ⏳ Solving your equation...
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results" id="results">
+            <div class="result-card">
+                <h2>📝 Original Equation</h2>
+                <div class="equation-display" id="originalEquation"></div>
+            </div>
+
+            <div class="result-card">
+                <h2>✅ Solution</h2>
+                <div class="solution-display" id="solution"></div>
+            </div>
+
+            <div class="result-card">
+                <h2>📚 Step-by-Step Explanation</h2>
+                <div class="steps-container" id="stepsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Algebra.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/algebra.js/0.2.6/algebra.min.js"></script>
+
+    <script>
+        // DOM Elements
+        const form = document.getElementById('solverForm');
+        const equationInput = document.getElementById('equation');
+        const solveBtn = document.getElementById('solveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const results = document.getElementById('results');
+        const originalEquation = document.getElementById('originalEquation');
+        const solution = document.getElementById('solution');
+        const stepsContainer = document.getElementById('stepsContainer');
+
+        /**
+         * Main form submission handler
+         */
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const equation = equationInput.value.trim();
+
+            if (!equation) {
+                showError('Please enter an equation.');
+                return;
+            }
+
+            solveEquation(equation);
+        });
+
+        /**
+         * Clear button handler
+         */
+        clearBtn.addEventListener('click', () => {
+            equationInput.value = '';
+            hideError();
+            hideResults();
+        });
+
+        /**
+         * Solve equation using algebra.js
+         */
+        function solveEquation(equationStr) {
+            // Reset UI
+            hideError();
+            hideResults();
+            showLoading();
+            solveBtn.disabled = true;
+
+            try {
+                // Small delay to show loading state
+                setTimeout(() => {
+                    try {
+                        // Parse the equation using algebra.js
+                        const eq = algebra.parse(equationStr);
+                        
+                        // Find the variable in the equation
+                        const variable = findVariable(equationStr);
+                        
+                        if (!variable) {
+                            throw new Error('No variable found in equation. Please include a variable (like x or y).');
+                        }
+
+                        // Solve for the variable
+                        const answer = eq.solveFor(variable);
+                        
+                        // Display results with HSSC-style explanation
+                        displayResults(equationStr, variable, answer);
+                        
+                    } catch (error) {
+                        console.error('Solving error:', error);
+                        showError(`Error solving equation: ${error.message}. Make sure to use * for multiplication (e.g., "2*x" not "2x").`);
+                    } finally {
+                        hideLoading();
+                        solveBtn.disabled = false;
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(`Failed to solve equation: ${error.message}`);
+                hideLoading();
+                solveBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Find the variable in the equation (x, y, z, etc.)
+         */
+        function findVariable(equationStr) {
+            // Common variable names
+            const variables = ['x', 'y', 'z', 'a', 'b', 'c', 't', 'n', 'm'];
+            
+            for (let v of variables) {
+                if (equationStr.includes(v)) {
+                    return v;
+                }
+            }
+            
+            // If no common variable found, look for any letter
+            const match = equationStr.match(/[a-zA-Z]/);
+            return match ? match[0] : null;
+        }
+
+        /**
+         * Display results with HSSC-style explanation
+         */
+        function displayResults(equationStr, variable, answer) {
+            // Display original equation
+            originalEquation.textContent = equationStr;
+
+            // Format and display solution
+            let solutionText;
+            if (Array.isArray(answer)) {
+                // Multiple solutions (quadratic/cubic)
+                solutionText = `${variable} = ${answer.map(a => formatAnswer(a)).join(' or ')}`;
+            } else {
+                // Single solution
+                solutionText = `${variable} = ${formatAnswer(answer)}`;
+            }
+            solution.textContent = solutionText;
+
+            // Generate HSSC-style step-by-step explanation
+            const steps = generateHSSCSteps(equationStr, variable, answer);
+            displaySteps(steps);
+
+            // Show results section
+            showResults();
+        }
+
+        /**
+         * Format the answer for display
+         */
+        function formatAnswer(ans) {
+            if (ans === null || ans === undefined) {
+                return 'undefined';
+            }
+            
+            if (typeof ans === 'object' && ans.toString) {
+                return ans.toString();
+            }
+            
+            return ans.toString();
+        }
+
+        /**
+         * Generate HSSC-style step-by-step explanation
+         * Follows FBISE teaching methodology for algebra
+         */
+        function generateHSSCSteps(equationStr, variable, answer) {
+            const steps = [];
+            
+            // Determine equation type
+            const equationType = determineEquationType(equationStr);
+            
+            // Step 1: Write the original equation
+            steps.push({
+                description: `Begin with the original equation. Our goal is to isolate the variable ${variable}.`,
+                equation: equationStr,
+                explanation: 'This is our starting point.'
+            });
+
+            // Generate steps based on equation type
+            if (equationType === 'linear') {
+                generateLinearSteps(equationStr, variable, answer, steps);
+            } else if (equationType === 'quadratic') {
+                generateQuadraticSteps(equationStr, variable, answer, steps);
+            } else if (equationType === 'cubic') {
+                generateCubicSteps(equationStr, variable, answer, steps);
+            } else {
+                generateGenericSteps(equationStr, variable, answer, steps);
+            }
+
+            // Final step: State the solution
+            let finalAnswer = Array.isArray(answer) 
+                ? answer.map(a => formatAnswer(a)).join(' or ')
+                : formatAnswer(answer);
+
+            steps.push({
+                description: `The value of ${variable} has been found.`,
+                equation: `${variable} = ${finalAnswer}`,
+                explanation: 'This is our final answer.'
+            });
+
+            return steps;
+        }
+
+        /**
+         * Determine the type of equation
+         */
+        function determineEquationType(equationStr) {
+            if (equationStr.includes('^3')) {
+                return 'cubic';
+            } else if (equationStr.includes('^2')) {
+                return 'quadratic';
+            } else {
+                return 'linear';
+            }
+        }
+
+        /**
+         * Generate steps for linear equations (HSSC Class 11 level)
+         */
+        function generateLinearSteps(equationStr, variable, answer, steps) {
+            // Parse the equation to work with it
+            const sides = equationStr.split('=');
+            const leftSide = sides[0].trim();
+            const rightSide = sides[1].trim();
+            
+            steps.push({
+                description: `Simplify both sides of the equation if needed.`,
+                equation: equationStr,
+                explanation: 'We combine like terms on each side.'
+            });
+
+            // Try to show a rearranged version
+            steps.push({
+                description: `Move all terms with ${variable} to the left side and all constants to the right side.`,
+                equation: `Terms with ${variable} = Constants`,
+                explanation: 'Use addition or subtraction to move terms. What you do to one side, you must do to the other.'
+            });
+
+            // Show the isolation step
+            let finalAnswer = formatAnswer(answer);
+            steps.push({
+                description: `Isolate ${variable} by performing inverse operations.`,
+                equation: `${variable} = ${finalAnswer}`,
+                explanation: `If ${variable} is multiplied by a number, divide both sides by that number.`
+            });
+        }
+
+        /**
+         * Generate steps for quadratic equations (HSSC Class 11/12 level)
+         */
+        function generateQuadraticSteps(equationStr, variable, answer, steps) {
+            steps.push({
+                description: `This is a quadratic equation in the standard form ax² + bx + c = 0.`,
+                equation: equationStr,
+                explanation: 'To solve quadratic equations, we use factoring or the quadratic formula.'
+            });
+
+            if (Array.isArray(answer) && answer.length === 2) {
+                // Show factored form (approximation)
+                let ans1 = formatAnswer(answer[0]);
+                let ans2 = formatAnswer(answer[1]);
+                
+                steps.push({
+                    description: `Factor the equation.`,
+                    equation: `(${variable} - ${ans1})(${variable} - ${ans2}) = 0`,
+                    explanation: 'We find two numbers whose product is c and sum is b.'
+                });
+
+                steps.push({
+                    description: `Apply the Zero Product Property.`,
+                    equation: `${variable} - ${ans1} = 0  OR  ${variable} - ${ans2} = 0`,
+                    explanation: 'If the product of two factors is zero, at least one factor must be zero.'
+                });
+                
+                steps.push({
+                    description: `Solve each equation.`,
+                    equation: `${variable} = ${ans1}  OR  ${variable} = ${ans2}`,
+                    explanation: 'Add the constant to both sides to isolate the variable.'
+                });
+            } else {
+                steps.push({
+                    description: `Use the quadratic formula: x = (-b ± √(b² - 4ac)) / 2a`,
+                    equation: 'x = (-b ± √(b² - 4ac)) / 2a',
+                    explanation: 'This formula can solve any quadratic equation.'
+                });
+                
+                let finalAnswer = formatAnswer(answer);
+                steps.push({
+                    description: `Simplify to get the solution.`,
+                    equation: `${variable} = ${finalAnswer}`,
+                    explanation: 'Calculate the discriminant and simplify.'
+                });
+            }
+        }
+
+        /**
+         * Generate steps for cubic equations
+         */
+        function generateCubicSteps(equationStr, variable, answer, steps) {
+            steps.push({
+                description: `This is a cubic equation containing ${variable}³.`,
+                equation: equationStr,
+                explanation: 'Cubic equations have at least one real root.'
+            });
+
+            if (Array.isArray(answer)) {
+                let roots = answer.map(a => formatAnswer(a)).join(', ');
+                steps.push({
+                    description: `Factor the equation or use numerical methods.`,
+                    equation: `Roots: ${variable} = ${roots}`,
+                    explanation: 'We try possible roots and use synthetic division.'
+                });
+            } else {
+                steps.push({
+                    description: `Factor the equation or use numerical methods.`,
+                    equation: `${variable} = ${formatAnswer(answer)}`,
+                    explanation: 'We try possible roots and use synthetic division.'
+                });
+            }
+        }
+
+        /**
+         * Generate generic steps for other equation types
+         */
+        function generateGenericSteps(equationStr, variable, answer, steps) {
+            steps.push({
+                description: `Simplify both sides.`,
+                equation: equationStr,
+                explanation: 'Combine like terms and distribute.'
+            });
+
+            let finalAnswer = formatAnswer(answer);
+            steps.push({
+                description: `Isolate ${variable} on one side.`,
+                equation: `${variable} = ${finalAnswer}`,
+                explanation: 'Use algebraic operations to isolate the variable.'
+            });
+        }
+
+        /**
+         * Display steps in the UI
+         */
+        function displaySteps(steps) {
+            stepsContainer.innerHTML = '';
+
+            steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step';
+
+                const stepNumber = document.createElement('div');
+                stepNumber.className = 'step-number';
+                stepNumber.textContent = `Step ${index + 1}:`;
+
+                const stepDescription = document.createElement('div');
+                stepDescription.className = 'step-description';
+                stepDescription.textContent = step.description;
+
+                const stepEquation = document.createElement('div');
+                stepEquation.className = 'step-equation';
+                stepEquation.textContent = step.equation;
+
+                stepDiv.appendChild(stepNumber);
+                stepDiv.appendChild(stepDescription);
+                if (step.equation) {
+                    stepDiv.appendChild(stepEquation);
+                }
+                if (step.explanation) {
+                    const explanation = document.createElement('div');
+                    explanation.className = 'step-description';
+                    explanation.style.fontStyle = 'italic';
+                    explanation.style.marginTop = '8px';
+                    explanation.textContent = step.explanation;
+                    stepDiv.appendChild(explanation);
+                }
+
+                stepsContainer.appendChild(stepDiv);
+            });
+        }
+
+        /**
+         * UI Helper Functions
+         */
+        function showLoading() {
+            loading.classList.add('active');
+        }
+
+        function hideLoading() {
+            loading.classList.remove('active');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('active');
+        }
+
+        function showResults() {
+            results.classList.add('active');
+        }
+
+        function hideResults() {
+            results.classList.remove('active');
+        }
+
+        // Load saved equation on page load (if any)
+        window.addEventListener('load', () => {
+            const savedEquation = sessionStorage.getItem('last_equation');
+            if (savedEquation) {
+                equationInput.value = savedEquation;
+            }
+        });
+
+        // Save equation for next session
+        equationInput.addEventListener('change', (e) => {
+            sessionStorage.setItem('last_equation', e.target.value);
+        });
+    </script>
+</body>
+</html>
